@@ -1,10 +1,12 @@
 "use client";
 
-import { funnelData, getDropOff } from "@/data/mock-funnel";
+import { getAggregatedFunnel } from "@/lib/windsor";
 import { ArrowDown, TrendingUp } from "lucide-react";
 
 export function FunnelChart() {
+  const funnelData = getAggregatedFunnel();
   const maxValue = funnelData[0].value;
+  const overallRate = ((funnelData[4].value / funnelData[0].value) * 100).toFixed(2);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -14,12 +16,12 @@ export function FunnelChart() {
             Funil de Conversão
           </h2>
           <p className="text-sm text-slate-500">
-            Sessões → Purchase · Últimos 30 dias
+            GA4 Vortex · Últimos 30 dias (dados reais)
           </p>
         </div>
         <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
           <TrendingUp className="h-3.5 w-3.5" />
-          Taxa geral: {((funnelData[4].value / funnelData[0].value) * 100).toFixed(2)}%
+          Taxa geral: {overallRate}%
         </div>
       </div>
 
@@ -27,8 +29,7 @@ export function FunnelChart() {
         {funnelData.map((step, index) => {
           const widthPercent = (step.value / maxValue) * 100;
           const prevChange = (
-            ((step.value - step.previousValue) / step.previousValue) *
-            100
+            ((step.value - step.previousValue) / step.previousValue) * 100
           ).toFixed(1);
           const isPositive = step.value >= step.previousValue;
 
@@ -70,7 +71,7 @@ export function FunnelChart() {
                   <ArrowDown className="h-3 w-3 text-slate-300" />
                   <span className="text-xs text-slate-400">
                     Drop-off:{" "}
-                    {getDropOff(step.value, funnelData[index + 1].value)}%
+                    {(((step.value - funnelData[index + 1].value) / step.value) * 100).toFixed(1)}%
                   </span>
                 </div>
               )}

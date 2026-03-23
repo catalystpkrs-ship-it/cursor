@@ -27,14 +27,10 @@ export default function Home() {
           <ChannelTable />
         </div>
 
-        <div className="mt-6 rounded-xl border-2 border-dashed border-slate-200 bg-white/50 p-8 text-center">
-          <p className="text-sm font-medium text-slate-400">
-            Conexão GA4 — Pronto para integração
-          </p>
-          <p className="mt-1 text-xs text-slate-400">
-            A estrutura está preparada para receber dados reais da Google
-            Analytics Data API
-          </p>
+        <div className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+          <span className="text-xs font-medium text-emerald-600">
+            Dados reais do GA4 Vortex via Windsor.ai · Conta 372674508 · Últimos 30 dias
+          </span>
         </div>
       </main>
     </div>

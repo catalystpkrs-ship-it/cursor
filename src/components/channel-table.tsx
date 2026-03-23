@@ -1,20 +1,20 @@
 "use client";
 
-import { channelBreakdown } from "@/data/mock-funnel";
-
-const channelLabels: Record<string, string> = {
-  "meta-ads": "Meta Ads",
-  "google-ads": "Google Ads",
-  organic: "Orgânico",
-  direct: "Direto",
-};
+import { ga4ChannelData } from "@/lib/windsor";
 
 export function ChannelTable() {
+  const sorted = [...ga4ChannelData].sort((a, b) => b.sessions - a.sessions);
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-lg font-semibold text-slate-800">
-        Performance por Canal
-      </h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-slate-800">
+          Performance por Canal
+        </h2>
+        <p className="text-sm text-slate-500">
+          GA4 Vortex · Últimos 30 dias
+        </p>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -38,32 +38,44 @@ export function ChannelTable() {
                 Purchase
               </th>
               <th className="pb-3 text-right font-medium text-slate-500">
+                Receita
+              </th>
+              <th className="pb-3 text-right font-medium text-slate-500">
                 Conv. Rate
               </th>
             </tr>
           </thead>
           <tbody>
-            {Object.entries(channelBreakdown).map(([key, steps]) => {
-              const convRate = (
-                (steps[4].value / steps[0].value) *
-                100
-              ).toFixed(2);
+            {sorted.map((ch) => {
+              const convRate = ch.sessions > 0
+                ? ((ch.ecommerce_purchases / ch.sessions) * 100).toFixed(2)
+                : "0.00";
               return (
                 <tr
-                  key={key}
+                  key={ch.session_default_channel_group}
                   className="border-b border-slate-50 transition-colors hover:bg-slate-50"
                 >
                   <td className="py-3 font-medium text-slate-700">
-                    {channelLabels[key]}
+                    {ch.session_default_channel_group}
                   </td>
-                  {steps.map((step) => (
-                    <td
-                      key={step.label}
-                      className="py-3 text-right text-slate-600"
-                    >
-                      {step.value.toLocaleString("pt-BR")}
-                    </td>
-                  ))}
+                  <td className="py-3 text-right text-slate-600">
+                    {ch.sessions.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="py-3 text-right text-slate-600">
+                    {ch.item_view_events.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="py-3 text-right text-slate-600">
+                    {ch.add_to_carts.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="py-3 text-right text-slate-600">
+                    {ch.checkouts.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="py-3 text-right text-slate-600">
+                    {ch.ecommerce_purchases.toLocaleString("pt-BR")}
+                  </td>
+                  <td className="py-3 text-right text-slate-600">
+                    R$ {ch.purchase_revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </td>
                   <td className="py-3 text-right font-semibold text-indigo-600">
                     {convRate}%
                   </td>

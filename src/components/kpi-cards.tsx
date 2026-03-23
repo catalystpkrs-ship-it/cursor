@@ -1,52 +1,36 @@
 "use client";
 
-import { funnelData } from "@/data/mock-funnel";
+import { getKPIs } from "@/lib/windsor";
 import {
   ArrowDownRight,
   ArrowUpRight,
   DollarSign,
-  Eye,
-  ShoppingCart,
+  Percent,
+  TrendingUp,
   Users,
 } from "lucide-react";
 
-const kpis = [
-  {
-    label: "Sessões",
-    value: funnelData[0].value,
-    previous: funnelData[0].previousValue,
-    icon: Users,
-    format: "number",
-  },
-  {
-    label: "Visualizações",
-    value: funnelData[1].value,
-    previous: funnelData[1].previousValue,
-    icon: Eye,
-    format: "number",
-  },
-  {
-    label: "Add to Cart",
-    value: funnelData[2].value,
-    previous: funnelData[2].previousValue,
-    icon: ShoppingCart,
-    format: "number",
-  },
-  {
-    label: "Receita Estimada",
-    value: funnelData[4].value * 127.5,
-    previous: funnelData[4].previousValue * 127.5,
-    icon: DollarSign,
-    format: "currency",
-  },
-];
+const icons = [Users, TrendingUp, DollarSign, Percent];
 
 export function KPICards() {
+  const kpis = getKPIs();
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {kpis.map((kpi) => {
-        const change = ((kpi.value - kpi.previous) / kpi.previous) * 100;
-        const isPositive = change >= 0;
+      {kpis.map((kpi, i) => {
+        const change = ((kpi.value - kpi.previousValue) / kpi.previousValue) * 100;
+        const isPositive = kpi.format === "percent" ? change < 0 : change >= 0;
+        const Icon = icons[i];
+
+        let displayValue: string;
+        if (kpi.format === "currency") {
+          displayValue = `R$ ${(kpi.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        } else if (kpi.format === "percent") {
+          displayValue = `${(kpi.value * 100).toFixed(1)}%`;
+        } else {
+          displayValue = kpi.value.toLocaleString("pt-BR");
+        }
+
         return (
           <div
             key={kpi.label}
@@ -56,12 +40,10 @@ export function KPICards() {
               <span className="text-sm font-medium text-slate-500">
                 {kpi.label}
               </span>
-              <kpi.icon className="h-4 w-4 text-slate-400" />
+              <Icon className="h-4 w-4 text-slate-400" />
             </div>
             <p className="mt-2 text-2xl font-bold text-slate-800">
-              {kpi.format === "currency"
-                ? `R$ ${(kpi.value / 1000).toFixed(1)}k`
-                : kpi.value.toLocaleString("pt-BR")}
+              {displayValue}
             </p>
             <div className="mt-1 flex items-center gap-1">
               {isPositive ? (
@@ -74,8 +56,8 @@ export function KPICards() {
                   isPositive ? "text-emerald-500" : "text-red-500"
                 }`}
               >
-                {isPositive ? "+" : ""}
-                {change.toFixed(1)}% vs anterior
+                {change >= 0 ? "+" : ""}
+                {change.toFixed(1)}% vs período anterior
               </span>
             </div>
           </div>

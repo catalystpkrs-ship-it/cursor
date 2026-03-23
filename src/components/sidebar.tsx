@@ -54,9 +54,10 @@ export function Sidebar() {
 
       <div className="border-t border-slate-700/50 p-4">
         <div className="rounded-lg bg-slate-800 p-3">
-          <p className="text-xs text-slate-400">Conectado ao GA4</p>
+          <p className="text-xs font-medium text-slate-300">GA4 Vortex</p>
+          <p className="text-xs text-slate-500">via Windsor.ai</p>
           <p className="mt-1 text-xs font-medium text-emerald-400">
-            ● Sincronizado
+            ● Conectado · Conta 372674508
           </p>
         </div>
       </div>
