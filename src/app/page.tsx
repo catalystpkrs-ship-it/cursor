@@ -1,8 +1,12 @@
+import dynamic from "next/dynamic";
+import { AIInsights } from "@/components/ai-insights";
 import { ChannelTable } from "@/components/channel-table";
 import { FunnelChart } from "@/components/funnel-chart";
 import { GlobalFilter } from "@/components/global-filter";
 import { KPICards } from "@/components/kpi-cards";
 import { Sidebar } from "@/components/sidebar";
+
+const Funnel3D = dynamic(() => import("@/components/funnel-3d").then(m => ({ default: m.Funnel3D })), { ssr: false });
 
 export default function Home() {
   return (
@@ -22,6 +26,10 @@ export default function Home() {
           <KPICards />
         </div>
 
+        <div className="mt-6">
+          <Funnel3D />
+        </div>
+
         <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
           <FunnelChart />
           <ChannelTable />
@@ -33,6 +41,8 @@ export default function Home() {
           </span>
         </div>
       </main>
+
+      <AIInsights />
     </div>
   );
 }
