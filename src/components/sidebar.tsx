@@ -9,10 +9,11 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
+export type ViewName = "Dashboard" | "Funil" | "Canais" | "Tendências" | "AI Insights" | "Config";
+
+const navItems: { icon: typeof LayoutDashboard; label: ViewName }[] = [
+  { icon: LayoutDashboard, label: "Dashboard" },
   { icon: Funnel, label: "Funil" },
   { icon: BarChart3, label: "Canais" },
   { icon: TrendingUp, label: "Tendências" },
@@ -20,9 +21,12 @@ const navItems = [
   { icon: Settings, label: "Config" },
 ];
 
-export function Sidebar() {
-  const [active, setActive] = useState("Dashboard");
+interface SidebarProps {
+  active: ViewName;
+  onNavigate: (view: ViewName) => void;
+}
 
+export function Sidebar({ active, onNavigate }: SidebarProps) {
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-slate-900 text-white">
       <div className="flex h-16 items-center gap-3 border-b border-slate-700/50 px-6">
@@ -38,7 +42,7 @@ export function Sidebar() {
         {navItems.map((item) => (
           <button
             key={item.label}
-            onClick={() => setActive(item.label)}
+            onClick={() => onNavigate(item.label)}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               active === item.label

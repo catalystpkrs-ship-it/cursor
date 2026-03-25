@@ -1,11 +1,15 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
 
-const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY ?? "",
-});
-
 export async function POST(req: Request) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    return new Response("API key not configured", { status: 401 });
+  }
+
+  const anthropic = createAnthropic({ apiKey });
+
   const { funnelData, channelData, kpiData } = await req.json();
 
   const result = streamText({
