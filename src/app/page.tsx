@@ -1,28 +1,16 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import { AIInsightsView } from "@/components/ai-insights-view";
 import { ChannelsView } from "@/components/channels-view";
 import { ChannelTable } from "@/components/channel-table";
+import { Funnel2D } from "@/components/funnel-2d";
 import { FunnelChart } from "@/components/funnel-chart";
 import { FunnelView } from "@/components/funnel-view";
 import { GlobalFilter } from "@/components/global-filter";
 import { KPICards } from "@/components/kpi-cards";
 import { Sidebar, type ViewName } from "@/components/sidebar";
 import { TrendsChart } from "@/components/trends-chart";
-
-const Funnel3D = dynamic(
-  () => import("@/components/funnel-3d").then((m) => ({ default: m.Funnel3D })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-[380px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
-      </div>
-    ),
-  }
-);
 
 function DashboardView() {
   return (
@@ -38,8 +26,8 @@ function DashboardView() {
       <KPICards />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white h-[380px]">
-          <Funnel3D />
+        <div className="rounded-2xl border border-slate-200 bg-slate-900 px-6 py-6">
+          <Funnel2D />
         </div>
         <FunnelChart />
       </div>

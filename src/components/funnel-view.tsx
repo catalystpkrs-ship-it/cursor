@@ -1,22 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { Funnel2D } from "@/components/funnel-2d";
 import { GlobalFilter } from "@/components/global-filter";
 import { getAggregatedFunnel } from "@/lib/windsor";
 import { cn } from "@/lib/utils";
 import { ArrowDownRight, ArrowUpRight, Lightbulb } from "lucide-react";
-
-const Funnel3D = dynamic(
-  () => import("@/components/funnel-3d").then((m) => ({ default: m.Funnel3D })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
-      </div>
-    ),
-  }
-);
 
 export function FunnelView() {
   const funnel = getAggregatedFunnel();
@@ -31,7 +19,7 @@ export function FunnelView() {
     const prevDropRate = next ? ((step.previousValue - next.previousValue) / step.previousValue) * 100 : null;
     const change = ((step.value - step.previousValue) / step.previousValue) * 100;
     const isPositive = step.value >= step.previousValue;
-    return { ...step, dropRate, prevDropRate, change, isPositive, next };
+    return { ...step, dropRate, prevDropRate, change, isPositive };
   });
 
   const worstDropIdx = steps.reduce((maxI, s, i, arr) =>
@@ -50,42 +38,25 @@ export function FunnelView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-slate-900">Funil de Conversão</h1>
-          <p className="text-xs text-slate-400">Passe o mouse no funil 3D para detalhes</p>
+          <p className="text-xs text-slate-400">Passe o mouse nas fatias para detalhes</p>
         </div>
         <GlobalFilter />
       </div>
 
-      {/* Main content: funnel 3D left + data right */}
+      {/* Main: funnel left + data right */}
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
-        {/* 3D Funnel - full height card */}
+        {/* Left: 2D Funnel */}
         <div className="xl:col-span-5">
-          <div className="rounded-2xl border border-slate-200 bg-white" style={{ height: "calc(100vh - 160px)", minHeight: 500 }}>
-            {/* Legend top */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-              <div className="flex items-center gap-3">
-                {funnel.map((s) => (
-                  <div key={s.key} className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
-                    <span className="text-[10px] text-slate-400">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600">
-                {overallRate}%
-              </span>
-            </div>
-            {/* Canvas */}
-            <div className="h-[calc(100%-44px)]">
-              <Funnel3D />
-            </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-900 px-6 py-8">
+            <Funnel2D />
           </div>
         </div>
 
-        {/* Right: data panels */}
+        {/* Right: data */}
         <div className="space-y-4 xl:col-span-7">
-          {/* Conversion rate header */}
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3 flex-1">
+          {/* Top metrics */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3">
               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Conversão Geral</p>
               <div className="mt-1 flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-slate-900">{overallRate}%</span>
@@ -95,17 +66,17 @@ export function FunnelView() {
                 </div>
               </div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3 flex-1">
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3">
               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Sessões</p>
               <p className="mt-1 text-2xl font-bold text-slate-900">{(funnel[0].value / 1000).toFixed(1)}k</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3 flex-1">
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3">
               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Compras</p>
               <p className="mt-1 text-2xl font-bold text-slate-900">{funnel[4].value}</p>
             </div>
           </div>
 
-          {/* Funnel steps table */}
+          {/* Steps table */}
           <div className="rounded-2xl border border-slate-200 bg-white">
             <table className="w-full">
               <thead>
@@ -168,7 +139,7 @@ export function FunnelView() {
             </table>
           </div>
 
-          {/* Funnel bar visualization */}
+          {/* Bar visualization */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="space-y-2">
               {funnel.map((step) => {
@@ -179,9 +150,9 @@ export function FunnelView() {
                     <div className="flex-1 h-6 rounded-lg bg-slate-50 overflow-hidden">
                       <div
                         className="h-full rounded-lg flex items-center transition-all duration-500"
-                        style={{ width: `${pct}%`, backgroundColor: step.color }}
+                        style={{ width: `${Math.max(pct, 3)}%`, backgroundColor: step.color }}
                       >
-                        <span className="px-2 text-[10px] font-bold text-white/80">{pct.toFixed(1)}%</span>
+                        {pct > 8 && <span className="px-2 text-[10px] font-bold text-white/80">{pct.toFixed(1)}%</span>}
                       </div>
                     </div>
                     <span className="w-16 text-right text-[10px] font-bold tabular-nums text-slate-700">
