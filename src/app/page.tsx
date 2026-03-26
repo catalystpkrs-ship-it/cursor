@@ -17,8 +17,8 @@ const Funnel3D = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[400px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
-        <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
+      <div className="flex h-[380px] items-center justify-center rounded-2xl border border-slate-200 bg-white">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
       </div>
     ),
   }
@@ -38,7 +38,9 @@ function DashboardView() {
       <KPICards />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Funnel3D />
+        <div className="rounded-2xl border border-slate-200 bg-white h-[380px]">
+          <Funnel3D />
+        </div>
         <FunnelChart />
       </div>
 
