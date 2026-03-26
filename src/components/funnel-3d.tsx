@@ -23,7 +23,8 @@ function FunnelSlice({ step, nextStep, index, totalSteps, maxValue, onHover }: F
     const gap = 0.08;
     const topRadius = (step.value / maxValue) * 2;
     const bottomRadius = nextStep ? (nextStep.value / maxValue) * 2 : topRadius * 0.6;
-    const y = (totalSteps / 2 - index) * (sliceHeight + gap);
+    // Top of funnel (index 0) = highest Y, bottom (last index) = lowest Y
+    const y = ((totalSteps - 1) / 2 - index) * (sliceHeight + gap);
 
     const segments = 64;
     const geo = new THREE.CylinderGeometry(bottomRadius, topRadius, sliceHeight, segments);
@@ -130,17 +131,17 @@ export function Funnel3D() {
   );
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">Funil 3D Interativo</h2>
-          <p className="text-sm text-slate-500">Passe o mouse nas fatias para ver detalhes</p>
+          <h2 className="text-base font-semibold text-slate-800">Funil 3D</h2>
+          <p className="text-xs text-slate-400">Passe o mouse para ver detalhes</p>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
-          Conv. geral: {overallRate}%
+        <div className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+          {overallRate}% conv.
         </div>
       </div>
-      <div className="h-[420px] w-full cursor-grab active:cursor-grabbing">
+      <div className="h-[400px] w-full cursor-grab active:cursor-grabbing">
         <Canvas camera={{ position: [4, 1.5, 4], fov: 45 }}>
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 5, 5]} intensity={0.8} />
@@ -172,7 +173,7 @@ export function Funnel3D() {
       <div className="flex justify-center gap-4 border-t border-slate-100 px-6 py-3">
         {funnelData.map((step) => (
           <div key={step.key} className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: step.color }} />
+            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: step.color }} />
             <span className="text-xs text-slate-500">{step.label}</span>
           </div>
         ))}

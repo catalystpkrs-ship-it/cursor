@@ -1,120 +1,106 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Calendar, ChevronDown, GitCompareArrows } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { useState } from "react";
 
-const datePresets = [
-  "Últimos 7 dias",
-  "Últimos 14 dias",
-  "Últimos 30 dias",
-  "Este mês",
-  "Mês anterior",
-  "Personalizado",
+export type DateRange = "7d" | "15d" | "30d" | "1y" | "custom";
+
+interface GlobalFilterProps {
+  selected?: DateRange;
+  onDateChange?: (range: DateRange) => void;
+}
+
+const quickFilters: { value: DateRange; label: string }[] = [
+  { value: "7d", label: "7D" },
+  { value: "15d", label: "15D" },
+  { value: "30d", label: "30D" },
+  { value: "1y", label: "1 Ano" },
 ];
 
-const channels = [
-  { id: "meta-ads", label: "Meta Ads", color: "bg-blue-500" },
-  { id: "google-ads", label: "Google Ads", color: "bg-yellow-500" },
-  { id: "organic", label: "Orgânico", color: "bg-green-500" },
-  { id: "direct", label: "Direto", color: "bg-purple-500" },
-];
+export function GlobalFilter({ selected = "30d", onDateChange }: GlobalFilterProps) {
+  const [activeRange, setActiveRange] = useState<DateRange>(selected);
+  const [showCustom, setShowCustom] = useState(false);
+  const [startDate, setStartDate] = useState("2026-02-21");
+  const [endDate, setEndDate] = useState("2026-03-22");
 
-export function GlobalFilter() {
-  const [selectedDate, setSelectedDate] = useState("Últimos 30 dias");
-  const [comparePrevious, setComparePrevious] = useState(false);
-  const [selectedChannels, setSelectedChannels] = useState<string[]>([
-    "meta-ads",
-    "google-ads",
-    "organic",
-    "direct",
-  ]);
-  const [showDateDropdown, setShowDateDropdown] = useState(false);
-
-  const toggleChannel = (id: string) => {
-    setSelectedChannels((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+  const handleSelect = (range: DateRange) => {
+    setActiveRange(range);
+    setShowCustom(false);
+    onDateChange?.(range);
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-3.5 shadow-sm">
-      {/* Date Selector */}
+    <div className="flex items-center gap-2">
+      {/* Quick filter buttons */}
+      <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1">
+        {quickFilters.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => handleSelect(f.value)}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs font-semibold transition-all",
+              activeRange === f.value
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-500 hover:text-slate-800"
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Custom date picker */}
       <div className="relative">
         <button
-          onClick={() => setShowDateDropdown(!showDateDropdown)}
-          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          onClick={() => { setShowCustom(!showCustom); setActiveRange("custom"); }}
+          className={cn(
+            "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
+            activeRange === "custom"
+              ? "border-slate-900 bg-slate-900 text-white"
+              : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+          )}
         >
-          <Calendar className="h-4 w-4 text-slate-400" />
-          {selectedDate}
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+          <Calendar className="h-3.5 w-3.5" />
+          {activeRange === "custom" ? `${startDate} — ${endDate}` : "Personalizado"}
         </button>
-        {showDateDropdown && (
-          <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-            {datePresets.map((preset) => (
+
+        {showCustom && (
+          <div className="absolute left-0 top-full z-50 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Início</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+              </div>
+              <span className="mt-5 text-slate-300">—</span>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Fim</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+              </div>
               <button
-                key={preset}
-                onClick={() => {
-                  setSelectedDate(preset);
-                  setShowDateDropdown(false);
-                }}
-                className={cn(
-                  "block w-full px-4 py-2 text-left text-sm transition-colors",
-                  selectedDate === preset
-                    ? "bg-indigo-50 font-medium text-indigo-600"
-                    : "text-slate-600 hover:bg-slate-50"
-                )}
+                onClick={() => { handleSelect("custom"); setShowCustom(false); }}
+                className="mt-5 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
               >
-                {preset}
+                Aplicar
               </button>
-            ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Compare Toggle */}
-      <button
-        onClick={() => setComparePrevious(!comparePrevious)}
-        className={cn(
-          "flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors",
-          comparePrevious
-            ? "border-indigo-200 bg-indigo-50 text-indigo-600"
-            : "border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"
-        )}
-      >
-        <GitCompareArrows className="h-4 w-4" />
-        Comparar período anterior
-      </button>
-
-      {/* Divider */}
-      <div className="h-8 w-px bg-slate-200" />
-
-      {/* Channel Selectors */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
-          Canais
-        </span>
-        {channels.map((channel) => (
-          <button
-            key={channel.id}
-            onClick={() => toggleChannel(channel.id)}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-              selectedChannels.includes(channel.id)
-                ? "border-slate-300 bg-white text-slate-700 shadow-sm"
-                : "border-transparent bg-slate-100 text-slate-400"
-            )}
-          >
-            <div
-              className={cn(
-                "h-2 w-2 rounded-full transition-opacity",
-                channel.color,
-                !selectedChannels.includes(channel.id) && "opacity-30"
-              )}
-            />
-            {channel.label}
-          </button>
-        ))}
+      {/* Period comparison badge */}
+      <div className="rounded-lg border border-dashed border-slate-200 px-3 py-1.5 text-xs text-slate-400">
+        vs período anterior
       </div>
     </div>
   );
