@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Calendar } from "lucide-react";
+import { Calendar, Check, X } from "lucide-react";
 import { useState } from "react";
 
 export type DateRange = "7d" | "15d" | "30d" | "1y" | "custom";
@@ -23,11 +23,33 @@ export function GlobalFilter({ selected = "30d", onDateChange }: GlobalFilterPro
   const [showCustom, setShowCustom] = useState(false);
   const [startDate, setStartDate] = useState("2026-02-21");
   const [endDate, setEndDate] = useState("2026-03-22");
+  const [tempStart, setTempStart] = useState("2026-02-21");
+  const [tempEnd, setTempEnd] = useState("2026-03-22");
 
   const handleSelect = (range: DateRange) => {
     setActiveRange(range);
     setShowCustom(false);
     onDateChange?.(range);
+  };
+
+  const openCustom = () => {
+    setTempStart(startDate);
+    setTempEnd(endDate);
+    setShowCustom(true);
+  };
+
+  const applyCustom = () => {
+    setStartDate(tempStart);
+    setEndDate(tempEnd);
+    setActiveRange("custom");
+    setShowCustom(false);
+    onDateChange?.("custom");
+  };
+
+  const cancelCustom = () => {
+    setShowCustom(false);
+    if (activeRange !== "custom") return;
+    // Revert to previous quick filter if it was custom but never applied
   };
 
   return (
@@ -53,7 +75,7 @@ export function GlobalFilter({ selected = "30d", onDateChange }: GlobalFilterPro
       {/* Custom date picker */}
       <div className="relative">
         <button
-          onClick={() => { setShowCustom(!showCustom); setActiveRange("custom"); }}
+          onClick={openCustom}
           className={cn(
             "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
             activeRange === "custom"
@@ -66,35 +88,54 @@ export function GlobalFilter({ selected = "30d", onDateChange }: GlobalFilterPro
         </button>
 
         {showCustom && (
-          <div className="absolute left-0 top-full z-50 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
-            <div className="flex items-center gap-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Início</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                />
+          <>
+            {/* Backdrop */}
+            <div className="fixed inset-0 z-40" onClick={cancelCustom} />
+
+            {/* Dropdown */}
+            <div className="absolute right-0 top-full z-50 mt-2 rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+              <p className="mb-3 text-xs font-semibold text-slate-700">Período personalizado</p>
+              <div className="flex items-end gap-3">
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-400">Início</label>
+                  <input
+                    type="date"
+                    value={tempStart}
+                    onChange={(e) => setTempStart(e.target.value)}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  />
+                </div>
+                <span className="pb-2 text-slate-300">—</span>
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-400">Fim</label>
+                  <input
+                    type="date"
+                    value={tempEnd}
+                    onChange={(e) => setTempEnd(e.target.value)}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  />
+                </div>
               </div>
-              <span className="mt-5 text-slate-300">—</span>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Fim</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                />
+
+              {/* Action buttons */}
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  onClick={cancelCustom}
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Cancelar
+                </button>
+                <button
+                  onClick={applyCustom}
+                  className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Aplicar
+                </button>
               </div>
-              <button
-                onClick={() => { handleSelect("custom"); setShowCustom(false); }}
-                className="mt-5 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
-              >
-                Aplicar
-              </button>
             </div>
-          </div>
+          </>
         )}
       </div>
 
