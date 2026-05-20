@@ -1,0 +1,129 @@
+{%- comment -%}
+  =====================================================================
+  Progress bar de recompensas do carrinho — substitui o bloco antigo
+  de <free-shipping-bar> no cart-drawer.liquid.
+
+  Localize o bloco original que começa em:
+    {%- if settings.cart_show_free_shipping_threshold and ... -%}
+  e termina em:
+    {%- endif -%}   (antes de <form id="mini-cart-form" ...>)
+
+  Substitua TODO esse bloco pelo conteúdo abaixo.
+
+  Tiers (configuráveis nos assigns):
+    - Pirulito da marca       → qualquer valor (cart com itens)
+    - Frete grátis (Sul/SE/BA/GO) → a partir de R$179,90
+    - Porta-copos             → a partir de R$279,90
+    - Copo exclusivo de café  → a partir de R$299,90
+
+  Performance:
+    - Zero JS adicional (apenas CSS + Liquid)
+    - SVGs inline (sem HTTP extra)
+    - Animação por transform/opacity (composição GPU)
+    - <style> inline executa só dentro do drawer
+  =====================================================================
+{%- endcomment -%}
+
+{%- assign tier_2_threshold = 17990 -%}
+{%- assign tier_3_threshold = 27990 -%}
+{%- assign tier_4_threshold = 29990 -%}
+{%- assign max_threshold    = tier_4_threshold -%}
+
+{%- assign calculated_total_price = cart.total_price -%}
+{%- for line_item in cart.items -%}
+  {%- unless line_item.requires_shipping -%}
+    {%- assign calculated_total_price = calculated_total_price | minus: line_item.final_line_price -%}
+  {%- endunless -%}
+{%- endfor -%}
+
+{%- assign progress_ratio = calculated_total_price | times: 1.0 | divided_by: max_threshold | at_most: 1 -%}
+{%- assign progress_pct   = progress_ratio | times: 100 | round: 2 -%}
+
+{%- assign tier_2_pos = tier_2_threshold | times: 100.0 | divided_by: max_threshold | round: 2 -%}
+{%- assign tier_3_pos = tier_3_threshold | times: 100.0 | divided_by: max_threshold | round: 2 -%}
+
+{%- assign tier_1_unlocked = false -%}
+{%- assign tier_2_unlocked = false -%}
+{%- assign tier_3_unlocked = false -%}
+{%- assign tier_4_unlocked = false -%}
+{%- if cart.item_count > 0 -%}{%- assign tier_1_unlocked = true -%}{%- endif -%}
+{%- if calculated_total_price >= tier_2_threshold -%}{%- assign tier_2_unlocked = true -%}{%- endif -%}
+{%- if calculated_total_price >= tier_3_threshold -%}{%- assign tier_3_unlocked = true -%}{%- endif -%}
+{%- if calculated_total_price >= tier_4_threshold -%}{%- assign tier_4_unlocked = true -%}{%- endif -%}
+
+<style>
+  .rewards-bar{display:block;padding:14px 16px 18px;background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,0));border-bottom:1px solid rgba(0,0,0,.06);font-size:13px;line-height:1.35;color:inherit}
+  .rewards-bar__message{margin:0 0 12px;text-align:center;font-size:12.5px;letter-spacing:.01em}
+  .rewards-bar__message strong{font-weight:600}
+  .rewards-bar__message .rb-emoji{display:inline-block;transform:translateY(1px)}
+  .rewards-bar__track{position:relative;height:6px;background:rgba(0,0,0,.08);border-radius:999px;margin:22px 6px 38px}
+  .rewards-bar__fill{position:absolute;inset:0;width:calc(var(--progress,0) * 100%);background:linear-gradient(90deg,#7a4a2b,#b07a3e);border-radius:inherit;transform-origin:left center;transition:width .5s cubic-bezier(.22,.61,.36,1)}
+  .rewards-bar__tiers{position:absolute;inset:0;margin:0;padding:0;list-style:none;pointer-events:none}
+  .rewards-bar__tier{position:absolute;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;width:64px;pointer-events:auto}
+  .rewards-bar__tier-dot{position:relative;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.18);color:rgba(0,0,0,.45);transition:background .25s ease,border-color .25s ease,color .25s ease,transform .25s ease;will-change:transform}
+  .rewards-bar__tier-dot svg{width:12px;height:12px;display:block}
+  .rewards-bar__tier.is-unlocked .rewards-bar__tier-dot{background:#7a4a2b;border-color:#7a4a2b;color:#fff;transform:scale(1.08)}
+  .rewards-bar__tier.is-unlocked .rewards-bar__tier-dot::after{content:"";position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(176,122,62,.25),rgba(176,122,62,0) 70%);animation:rb-pulse 1.6s ease-out 1}
+  .rewards-bar__tier-label{font-size:10.5px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:rgba(0,0,0,.55);white-space:nowrap;transition:color .25s ease}
+  .rewards-bar__tier.is-unlocked .rewards-bar__tier-label{color:rgba(0,0,0,.85)}
+  .rewards-bar__tier-price{display:block;font-size:9.5px;font-weight:400;color:rgba(0,0,0,.45);margin-top:1px;letter-spacing:0;text-transform:none}
+  .rewards-bar__regions{display:block;margin-top:8px;text-align:center;font-size:10px;color:rgba(0,0,0,.45);letter-spacing:.02em}
+  @keyframes rb-pulse{0%{opacity:.9;transform:scale(.6)}100%{opacity:0;transform:scale(1.6)}}
+  @media (prefers-reduced-motion: reduce){.rewards-bar__fill{transition:none}.rewards-bar__tier-dot{transition:none}.rewards-bar__tier.is-unlocked .rewards-bar__tier-dot::after{animation:none}}
+  @media (max-width:480px){.rewards-bar__tier{width:54px}.rewards-bar__tier-label{font-size:9.5px}.rewards-bar__tier-price{font-size:9px}}
+</style>
+
+<div class="rewards-bar" style="--progress: {{ progress_ratio }}">
+  <p class="rewards-bar__message">
+    {%- if tier_4_unlocked -%}
+      <span class="rb-emoji">🎉</span> Você desbloqueou <strong>todas as recompensas</strong>!
+    {%- elsif tier_3_unlocked -%}
+      {%- capture remaining -%}{{ tier_4_threshold | minus: calculated_total_price | money }}{%- endcapture -%}
+      Falta <strong>{{ remaining }}</strong> para o <strong>copo exclusivo de café</strong> <span class="rb-emoji">☕</span>
+    {%- elsif tier_2_unlocked -%}
+      {%- capture remaining -%}{{ tier_3_threshold | minus: calculated_total_price | money }}{%- endcapture -%}
+      Falta <strong>{{ remaining }}</strong> para os <strong>porta-copos</strong> <span class="rb-emoji">🥤</span>
+    {%- elsif tier_1_unlocked -%}
+      {%- capture remaining -%}{{ tier_2_threshold | minus: calculated_total_price | money }}{%- endcapture -%}
+      Falta <strong>{{ remaining }}</strong> para <strong>frete grátis</strong> <span class="rb-emoji">🚚</span>
+    {%- else -%}
+      Adicione produtos e ganhe um <strong>pirulito da marca</strong> <span class="rb-emoji">🍭</span>
+    {%- endif -%}
+  </p>
+
+  <div class="rewards-bar__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress_pct }}" aria-label="Progresso de recompensas do carrinho">
+    <div class="rewards-bar__fill"></div>
+
+    <ul class="rewards-bar__tiers" role="list">
+      <li class="rewards-bar__tier{% if tier_1_unlocked %} is-unlocked{% endif %}" style="left:0%">
+        <span class="rewards-bar__tier-dot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="5"/><path d="M12.5 12.5L20 20"/></svg>
+        </span>
+        <span class="rewards-bar__tier-label">Pirulito<span class="rewards-bar__tier-price">grátis</span></span>
+      </li>
+
+      <li class="rewards-bar__tier{% if tier_2_unlocked %} is-unlocked{% endif %}" style="left:{{ tier_2_pos }}%">
+        <span class="rewards-bar__tier-dot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="13" height="10" rx="1"/><path d="M14 9h4l3 3v4h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg>
+        </span>
+        <span class="rewards-bar__tier-label">Frete grátis<span class="rewards-bar__tier-price">R$ 179,90</span></span>
+      </li>
+
+      <li class="rewards-bar__tier{% if tier_3_unlocked %} is-unlocked{% endif %}" style="left:{{ tier_3_pos }}%">
+        <span class="rewards-bar__tier-dot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="3" rx="1"/><path d="M5 8l1.5 11h11L19 8"/><path d="M9 12h6"/></svg>
+        </span>
+        <span class="rewards-bar__tier-label">Porta-copos<span class="rewards-bar__tier-price">R$ 279,90</span></span>
+      </li>
+
+      <li class="rewards-bar__tier{% if tier_4_unlocked %} is-unlocked{% endif %}" style="left:100%">
+        <span class="rewards-bar__tier-dot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h13v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M16 10h2a3 3 0 0 1 0 6h-2"/><path d="M7 4c0 1 1 1 1 2s-1 1-1 2"/><path d="M11 4c0 1 1 1 1 2s-1 1-1 2"/></svg>
+        </span>
+        <span class="rewards-bar__tier-label">Copo café<span class="rewards-bar__tier-price">R$ 299,90</span></span>
+      </li>
+    </ul>
+  </div>
+
+  <span class="rewards-bar__regions">Frete grátis para Sul, Sudeste, Bahia e Goiás</span>
+</div>
